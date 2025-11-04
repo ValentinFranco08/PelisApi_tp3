@@ -1,90 +1,83 @@
-# My-App (Expo Router / TMDB)
+# PELISAPI+ (Expo Router / TMDB)
 
 App de React Native con Expo Router que muestra una sola película de TMDB según un ID. Ingresas el ID en el Home, ves la película en la pantalla Películas y, al tocar el póster, navegas al Detalle de esa misma película.
 
-## Características
-- Home con buscador de ID de película (único lugar con input).
-- Pantalla Películas: muestra solo la película del ID recibido por params.
-- Tap en la imagen → navega al detalle dinámico `/detalle/[id]`.
-- Navegación con `expo-router` usando un único contenedor (sin contenedores anidados).
-- Componentes reutilizables en `components/` (Loading, ErrorView, MovieCard).
+# App móvil (Expo, TMDB, SQLite)
 
-## Requisitos
-- Node.js LTS (recomendado 18+)
-- npm 9+ o pnpm/yarn
-- Entorno RN para Expo:
-  - Android Studio (emulador) o dispositivo Android con Expo Go
-  - Xcode (simulador) o dispositivo iOS con Expo Go (en macOS)
+Proyecto finalizado parcialmente: aplicación Expo/React Native que consume la API de TMDB para mostrar datos de películas y mantiene una biblioteca local persistente con SQLite para realizar un CRUD completo. Además incluye un sistema de opiniones personales (puntaje 0–100, reseña y fecha).
 
-## Configuración de entorno
-1) Crea un archivo `.env` en la raíz con tu token Bearer (v4) de TMDB:
+Resumen rápido
+- Frontend: Expo + React Native + Expo Router.
+- Persistencia: SQLite local a través de `expo-sqlite`.
+- API externa: The Movie Database (TMDB) — se usa el token Bearer (v4) en `EXPO_PUBLIC_TMDB_API_KEY`.
 
+Funcionalidades principales
+- CRUD sobre la biblioteca local (`movies`): crear, listar, editar, eliminar.
+- Opiniones personales: cada registro puede contener `userRating` (0–100), `review` (texto) y `reviewDate` (fecha).
+- Guardar desde TMDB: guardar/actualizar películas usando datos desde TMDB (función `upsertFromTmdb`).
+- Formulario rápido de opinión en la pantalla `Peliculas` (slider + reseña).
+- Formularios completos para crear/editar películas en `Mi biblioteca` con campos de reseña y fecha (estilo distintivo).
+- Mensajes y confirmaciones con modal estilizado de la app (`components/AppModal.jsx`).
+
+Instalación y requisitos
+- Node.js (16+ recomendado) y npm / yarn / pnpm.
+- Expo CLI (opcional, se puede usar `npx expo`).
+
+Instalar dependencias:
+
+```powershell
+npm install
+npm install @react-native-community/slider
 ```
+
+Configurar la API Key de TMDB
+1. Crea un archivo `.env` en la raíz del proyecto con:
+
+```env
 EXPO_PUBLIC_TMDB_API_KEY=TU_TOKEN_BEARER_DE_TMDB
 ```
 
-- Debe ser el token Bearer (v4), no la API key v3.
-- Variables que comienzan con `EXPO_PUBLIC_` quedan disponibles en `process.env` dentro del bundle de Expo.
+2. Reinicia el bundler si haces cambios en `.env`.
 
-2) ¿Cómo obtener el token Bearer?
-- https://www.themoviedb.org/settings/api → “API Read Access Token (v4 auth)”.
+Arrancar en desarrollo
 
-## Instalación
-```
-npm install
-```
-
-## Ejecutar en desarrollo
-```
-npm start
-```
-Luego, en la terminal de Expo:
-- `a` Android, `i` iOS (macOS), `w` Web.
-
-## Rutas principales
-- `/` (Home): input para el ID y botones de navegación.
-- `/peliculas`: muestra solo la película del ID pasado por query (`/peliculas?id=122`).
-- `/detalle/[id]`: detalle dinámico de la película, por ejemplo `/detalle/122`.
-
-## Flujo de uso
-1) En Home, ingresa un ID de película (ej: 122).
-2) “Ver Película” → abre `/peliculas?id=<ID>` y carga esa película.
-3) Toca la imagen → navega a `/detalle/<ID>`.
-4) “Ver Detalle” desde Home salta directo al detalle.
-
-## Archivos relevantes
-- `app/index.js`: Home con input de ID y navegación.
-- `app/peliculas.js`: obtiene y muestra una sola película por ID; tap para ir a detalle.
-- `app/detalle/[id].js`: detalle usando `useLocalSearchParams`.
-- `app/_layout.js`: define la navegación (`Stack`) de Expo Router.
-- `components/Loading.jsx`: indicador de carga reutilizable.
-- `components/ErrorView.jsx`: vista simple para errores.
-- `components/MovieCard.jsx`: tarjeta de película (póster + texto + onPress).
-
-## Notas
-- Si ves un aviso sobre `Linking` y `scheme` en build, agrega un `scheme` en `app.json` o `app.config.js` para producción (en desarrollo no hace falta).
-- Si el token falta o es inválido, TMDB responde 401/403. Verifica `.env` y reinicia el bundler si cambias la variable.
-- La app usa Expo Router como único contenedor de navegación (sin NavigationContainer anidados).
-
-## Scripts
-- `npm start` Inicia el servidor de desarrollo (Expo)
-- `npm run android` Abre en Android (si es posible)
-- `npm run ios` Abre en iOS (macOS)
-- `npm run web` Abre versión web
-
-## Estructura
-```
-app/
-  _layout.js
-  index.js
-  peliculas.js
-  detalle/
-    [id].js
-components/
-  Loading.jsx
-  ErrorView.jsx
-  MovieCard.jsx
-.env
-package.json
+```powershell
+npx expo start
+# o con caché limpia
+npx expo start -c
 ```
 
+Rutas y pantallas (resumen)
+- `/` (Home): buscador por ID y accesos.
+- `/peliculas`: muestra una película por ID; incluye botón "Deja tu opinión" que abre el formulario rápido.
+- `/detalle/[id]`: vista de detalle SOLO con información pública (sin acciones de guardado).
+- `/biblioteca`: lista de películas guardadas (Read).
+- `/biblioteca/nuevo`: formulario para crear un registro manual (Create) — incluye campos de opinión.
+- `/biblioteca/[id]`: editar registro (Update) — incluye edición de reseña/puntaje/fecha; eliminar con confirmación (Delete).
+
+Archivos y componentes clave
+- `db/movies.js`: todas las operaciones SQLite (init, fetch, create, update, delete, upsertFromTmdb, saveReview, resetMovies).
+- `hooks/useMovies.js`: hook que centraliza llamadas a la DB y controla estado (movies, loading, error) y acciones (create, update, remove, saveFromTmdb, saveReview).
+- `components/MovieForm.jsx`: formulario completo para crear/editar películas (ahora con campos `userRating`, `review`, `reviewDate`).
+- `components/MovieReviewForm.jsx`: formulario rápido (slider 0–100 + reseña) usado en `/peliculas`.
+- `components/LibraryItem.jsx`: tarjeta de la lista que muestra título, poster y — si existe — `userRating` y un fragmento de la `review`.
+- `components/AppModal.jsx`: modal reutilizable para mensajes y confirmaciones (reemplaza Alert).
+
+Cómo el proyecto cubre la consigna (CRUD + SQLite)
+- Uso de SQLite: `db/movies.js` crea y normaliza la tabla `movies` y expone funciones para CRUD.
+- Create: `app/biblioteca/nuevo.js` (formulario manual) y `upsertFromTmdb` (guardar desde TMDB).
+- Read: `app/biblioteca/index.js` lista los registros guardados.
+- Update: `app/biblioteca/[id].js` permite editar todos los campos, incluidas las opiniones.
+- Delete: eliminación con confirmación modal disponible desde la lista y desde la pantalla de edición.
+- Persistencia: la DB local mantiene los registros entre reinicios de la app.
+
+Pruebas rápidas (checklist)
+1. `npx expo start -c`.
+2. Home → ingresar ID (ej: `122`) → Ver Película (`/peliculas?id=122`).
+3. Pulsar "Deja tu opinión" → completar slider + reseña → Guardar.
+4. Ver `Mi biblioteca`: confirmar que aparece la película con "Tu puntuación: X/100" y snippet de reseña.
+5. Editar un registro y modificar `userRating`, `review`, `reviewDate`.
+6. Crear un registro manual con reseña/puntaje/fecha.
+7. Reiniciar la app y verificar persistencia.
+
+---

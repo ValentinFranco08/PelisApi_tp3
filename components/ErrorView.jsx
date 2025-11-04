@@ -12,6 +12,7 @@ export default function ErrorView({ message = "Ocurrió un error", children }) {
 
 const styles = StyleSheet.create({
   center: { marginTop: 20, justifyContent: "center", alignItems: "center", paddingHorizontal: 16 },
-  text: { textAlign: "center", color: "#b00020" },
+  text: { textAlign: "center", color: "#ff5555" },
 });
+
 

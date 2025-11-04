@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import "dotenv/config";
 
 export default {
   expo: {
@@ -26,8 +26,10 @@ export default {
     web: {
       favicon: "./assets/favicon.png"
     },
+    scheme: "pelisapp",
+    plugins: ["expo-sqlite"],
     extra: {
-      // 👇 expo automáticamente expone esto en process.env.EXPO_PUBLIC_TMDB_API_KEY
+      // Expo expone esta variable en process.env.EXPO_PUBLIC_TMDB_API_KEY dentro del bundle
       EXPO_PUBLIC_TMDB_API_KEY: process.env.EXPO_PUBLIC_TMDB_API_KEY,
     }
   }
