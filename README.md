@@ -4,7 +4,7 @@ App de React Native con Expo Router que muestra una sola película de TMDB segú
 
 # App móvil (Expo, TMDB, SQLite)
 
-Proyecto finalizado parcialmente: aplicación Expo/React Native que consume la API de TMDB para mostrar datos de películas y mantiene una biblioteca local persistente con SQLite para realizar un CRUD completo. Además incluye un sistema de opiniones personales (puntaje 0–100, reseña y fecha).
+Proyecto finalizado: aplicación Expo/React Native que consume la API de TMDB para mostrar datos de películas y mantiene una biblioteca local persistente con SQLite para realizar un CRUD completo. Además incluye un sistema de opiniones personales (puntaje 0–100, reseña y fecha).
 
 Resumen rápido
 - Frontend: Expo + React Native + Expo Router.
