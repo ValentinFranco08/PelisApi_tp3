@@ -6,24 +6,72 @@ import { createUser } from '../db/auth';
 import AppModal from './AppModal';
 import { colors } from '../utils/commonStyles';
 
+const USERNAME_REGEX = /^[a-zA-Z0-9._-]+$/;
+const MIN_USERNAME = 3;
+const MIN_PASSWORD = 6;
+const MIN_NAME = 3;
+
 export default function RegisterForm() {
   const [formData, setFormData] = useState({
     username: '',
     password: '',
+    confirmPassword: '',
     name: '',
   });
   const [error, setError] = useState('');
   const [modal, setModal] = useState({ visible: false });
 
+  const validate = () => {
+    const name = formData.name.trim();
+    const username = formData.username.trim();
+    const password = formData.password;
+    const confirmPassword = formData.confirmPassword;
+    const lowerUsername = username.toLowerCase();
+
+    if (!name || !username || !password || !confirmPassword) {
+      return 'Por favor completá todos los campos';
+    }
+
+    if (name.length < MIN_NAME) {
+      return `El nombre debe tener al menos ${MIN_NAME} caracteres`;
+    }
+
+    if (username.length < MIN_USERNAME) {
+      return `El usuario debe tener al menos ${MIN_USERNAME} caracteres`;
+    }
+
+    if (!USERNAME_REGEX.test(username)) {
+      return 'El usuario solo puede contener letras, números, punto, guion y guion bajo';
+    }
+
+    if (lowerUsername === 'admin') {
+      return 'El nombre de usuario "admin" está reservado';
+    }
+
+    if (password.length < MIN_PASSWORD) {
+      return `La contraseña debe tener al menos ${MIN_PASSWORD} caracteres`;
+    }
+
+    if (password !== confirmPassword) {
+      return 'Las contraseñas no coinciden';
+    }
+
+    return null;
+  };
+
   const handleSubmit = async () => {
-    if (!formData.username || !formData.password || !formData.name) {
-      setError('Por favor completa todos los campos');
+    const validationError = validate();
+    if (validationError) {
+      setError(validationError);
       return;
     }
 
     try {
       await createUser({
-        ...formData,
+        username: formData.username.trim(),
+        password: formData.password,
+        confirmPassword: undefined,
+        name: formData.name.trim(),
         role: 'user', // Rol por defecto
       });
 
@@ -31,6 +79,7 @@ export default function RegisterForm() {
       setFormData({
         username: '',
         password: '',
+        confirmPassword: '',
         name: '',
       });
       setModal({
@@ -45,26 +94,37 @@ export default function RegisterForm() {
         ],
       });
     } catch (err) {
-      if (err.message?.includes('UNIQUE')) {
-        setError('El nombre de usuario ya existe');
-      } else {
-        setError('Error al crear la cuenta');
-        console.error('Error al registrar:', err);
+      const message = err?.message ?? '';
+      if (message.includes('El nombre de usuario ya existe')) {
+        setError('El nombre de usuario ya está registrado');
+        return;
       }
+      if (message.includes('UNIQUE')) {
+        setError('El nombre de usuario ya está registrado');
+        return;
+      }
+      setError('Ocurrió un error al crear la cuenta');
     }
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Crear Cuenta</Text>
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? (
+        <View style={styles.errorBox}>
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      ) : null}
 
       <TextInput
         style={styles.input}
         placeholder="Nombre completo"
         placeholderTextColor={colors.textSecondary}
         value={formData.name}
-        onChangeText={(text) => setFormData({ ...formData, name: text })}
+        onChangeText={(text) => {
+          setFormData({ ...formData, name: text });
+          if (error) setError('');
+        }}
       />
 
       <TextInput
@@ -72,7 +132,10 @@ export default function RegisterForm() {
         placeholder="Usuario"
         placeholderTextColor={colors.textSecondary}
         value={formData.username}
-        onChangeText={(text) => setFormData({ ...formData, username: text })}
+        onChangeText={(text) => {
+          setFormData({ ...formData, username: text });
+          if (error) setError('');
+        }}
         autoCapitalize="none"
       />
 
@@ -81,8 +144,21 @@ export default function RegisterForm() {
         placeholder="Contraseña"
         placeholderTextColor={colors.textSecondary}
         value={formData.password}
-        onChangeText={(text) => setFormData({ ...formData, password: text })}
-        secureTextEntry
+        onChangeText={(text) => {
+          setFormData({ ...formData, password: text });
+          if (error) setError('');
+        }}
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder="Confirmar contraseña"
+        placeholderTextColor={colors.textSecondary}
+        value={formData.confirmPassword}
+        onChangeText={(text) => {
+          setFormData({ ...formData, confirmPassword: text });
+          if (error) setError('');
+        }}
       />
 
       <TouchableOpacity style={styles.button} onPress={handleSubmit}>
@@ -145,8 +221,17 @@ const styles = StyleSheet.create({
     marginTop: 16,
     fontSize: 14,
   },
-  error: {
+  errorBox: {
+    backgroundColor: '#2f0d0d',
+    borderColor: colors.error,
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+  },
+  errorText: {
     color: colors.error,
-    marginBottom: 10,
+    fontWeight: '600',
+    textAlign: 'center',
   },
 });

@@ -49,6 +49,19 @@ export const initDatabase = async () => {
         'Administrador',
         'admin'
       );
+
+      const existingAdmin = await db.getFirstAsync(
+        'SELECT id, password FROM users WHERE username = ?',
+        'admin'
+      );
+      if (existingAdmin && existingAdmin.password !== adminPassword) {
+        await db.runAsync(
+          'UPDATE users SET password = ?, role = ? WHERE id = ?',
+          adminPassword,
+          'admin',
+          existingAdmin.id
+        );
+      }
     })();
   }
 
