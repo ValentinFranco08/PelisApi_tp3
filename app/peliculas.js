@@ -1,20 +1,20 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { View, StyleSheet, ScrollView, TouchableOpacity, Text } from "react-native";
-import { useRouter, useLocalSearchParams } from "expo-router";
-import Loading from "../components/Loading";
-import ErrorView from "../components/ErrorView";
-import MovieCard from "../components/MovieCard";
-import MovieReviewForm from "../components/MovieReviewForm";
-import { upsertFromTmdb, saveReview } from "../db/movies";
-import AppModal from "../components/AppModal";
+import React, { useEffect, useMemo, useState } from 'react';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Text } from 'react-native';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import Loading from '../components/Loading';
+import ErrorView from '../components/ErrorView';
+import MovieCard from '../components/MovieCard';
+import MovieReviewForm from '../components/MovieReviewForm';
+import { upsertFromTmdb, saveReview } from '../db/movies';
+import AppModal from '../components/AppModal';
 
 export default function Peliculas() {
   const router = useRouter();
   const { id: idParam } = useLocalSearchParams();
-  const movieId = useMemo(() => String(idParam || "122").trim(), [idParam]);
+  const movieId = useMemo(() => String(idParam || '122').trim(), [idParam]);
   const [pelicula, setPelicula] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [savedMovie, setSavedMovie] = useState(null);
@@ -23,9 +23,9 @@ export default function Peliculas() {
   useEffect(() => {
     const controller = new AbortController();
     const options = {
-      method: "GET",
+      method: 'GET',
       headers: {
-        accept: "application/json",
+        accept: 'application/json',
         Authorization: `Bearer ${process.env.EXPO_PUBLIC_TMDB_API_KEY}`,
       },
       signal: controller.signal,
@@ -34,19 +34,21 @@ export default function Peliculas() {
     async function fetchMovie() {
       try {
         setLoading(true);
-        setError("");
+        setError('');
         const res = await fetch(
           `https://api.themoviedb.org/3/movie/${movieId}?language=es-ES`,
           options
         );
         const data = await res.json();
+
         if (!res.ok || data.success === false || data.status_code) {
-          throw new Error(data.status_message || "No se encontro la pelicula");
+          throw new Error(data.status_message || 'No se encontro la pelicula');
         }
+
         setPelicula(data);
-      } catch (e) {
+      } catch (err) {
         setPelicula(null);
-        setError(e.message || "No se pudo cargar la pelicula");
+        setError(err.message || 'No se pudo cargar la pelicula');
       } finally {
         setLoading(false);
       }
@@ -57,8 +59,10 @@ export default function Peliculas() {
   }, [movieId]);
 
   async function handleSave() {
-    // Este handler ahora prepara la pelicula y abre el formulario de opinion
-    if (!pelicula) return;
+    if (!pelicula) {
+      return;
+    }
+
     try {
       setSaving(true);
       const saved = await upsertFromTmdb(pelicula);
@@ -68,9 +72,9 @@ export default function Peliculas() {
     } catch (err) {
       setModal({
         visible: true,
-        title: "Ups",
-        message: err?.message ?? "No se pudo guardar",
-        actions: [{ text: "Ok" }],
+        title: 'Ups',
+        message: err?.message ?? 'No se pudo guardar',
+        actions: [{ text: 'Ok' }],
       });
     } finally {
       setSaving(false);
@@ -78,26 +82,29 @@ export default function Peliculas() {
   }
 
   async function handleReviewSubmit(review) {
-    if (!savedMovie) return;
+    if (!savedMovie) {
+      return;
+    }
+
     try {
       setSaving(true);
       await saveReview(savedMovie.id, review);
       setShowReviewForm(false);
       setModal({
         visible: true,
-        title: "Opinión guardada",
-        message: "Tu reseña se guardó correctamente",
+        title: 'Opinion guardada',
+        message: 'Tu resena se guardo correctamente',
         actions: [
-          { text: "Ver biblioteca", onPress: () => router.push("/biblioteca") },
-          { text: "Seguir" },
+          { text: 'Ver biblioteca', onPress: () => router.push('/biblioteca') },
+          { text: 'Seguir' },
         ],
       });
     } catch (err) {
       setModal({
         visible: true,
-        title: "Ups",
-        message: err?.message ?? "No se pudo guardar la reseña",
-        actions: [{ text: "Ok" }],
+        title: 'Ups',
+        message: err?.message ?? 'No se pudo guardar la resena',
+        actions: [{ text: 'Ok' }],
       });
     } finally {
       setSaving(false);
@@ -107,12 +114,12 @@ export default function Peliculas() {
   return (
     <View style={styles.screen}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <TouchableOpacity style={styles.backLink} onPress={() => router.push("/")}>
+        <TouchableOpacity style={styles.backLink} onPress={() => router.push('/')}>
           <Text style={styles.backText}>Volver</Text>
         </TouchableOpacity>
 
         {loading && <Loading text="Cargando pelicula..." />}
-        {!loading && error !== "" && <ErrorView message={error} />}
+        {!loading && error !== '' && <ErrorView message={error} />}
         {!loading && pelicula && (
           <View style={styles.cardWrapper}>
             <MovieCard movie={pelicula} onPress={() => router.push(`/detalle/${pelicula.id}`)} />
@@ -120,7 +127,7 @@ export default function Peliculas() {
               <MovieReviewForm
                 initialValues={savedMovie}
                 onSubmit={handleReviewSubmit}
-                submitLabel={saving ? "Guardando..." : "Deja tu opinión"}
+                submitLabel={saving ? 'Guardando...' : 'Deja tu opinion'}
               />
             ) : (
               <TouchableOpacity
@@ -128,7 +135,9 @@ export default function Peliculas() {
                 onPress={handleSave}
                 disabled={saving}
               >
-                <Text style={styles.actionText}>{saving ? "Guardando..." : "Deja tu opinión"}</Text>
+                <Text style={styles.actionText}>
+                  {saving ? 'Guardando...' : 'Deja tu opinion'}
+                </Text>
               </TouchableOpacity>
             )}
           </View>
@@ -148,48 +157,48 @@ export default function Peliculas() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#0d0d0d",
+    backgroundColor: '#0d0d0d',
   },
   content: {
     padding: 24,
-    alignItems: "center",
+    alignItems: 'center',
     gap: 24,
   },
   backLink: {
-    alignSelf: "flex-start",
+    alignSelf: 'flex-start',
     paddingHorizontal: 18,
     paddingVertical: 8,
     borderRadius: 999,
-    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
   },
   backText: {
-    color: "#fff",
-    fontWeight: "600",
+    color: '#fff',
+    fontWeight: '600',
     letterSpacing: 1,
-    textTransform: "uppercase",
+    textTransform: 'uppercase',
     fontSize: 12,
   },
   cardWrapper: {
-    width: "100%",
-    alignItems: "center",
+    width: '100%',
+    alignItems: 'center',
     gap: 18,
   },
   actionButton: {
-    backgroundColor: "#e50914",
+    backgroundColor: '#e50914',
     borderRadius: 999,
     paddingVertical: 16,
     paddingHorizontal: 32,
-    alignItems: "center",
+    alignItems: 'center',
     minWidth: 260,
   },
   actionButtonDisabled: {
     opacity: 0.6,
   },
   actionText: {
-    color: "#fff",
+    color: '#fff',
     fontSize: 15,
-    fontWeight: "700",
-    textTransform: "uppercase",
+    fontWeight: '700',
+    textTransform: 'uppercase',
     letterSpacing: 1,
   },
 });

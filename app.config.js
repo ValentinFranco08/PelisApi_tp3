@@ -1,6 +1,17 @@
-import "dotenv/config";
+const path = require("path");
+require("dotenv").config();
 
-export default {
+const projectRoot = __dirname;
+const appDirectory = path.join(projectRoot, "app");
+const expoRouterCtxDir = path.dirname(require.resolve("expo-router/_ctx.web.js"));
+let relativeAppPath = path.relative(expoRouterCtxDir, appDirectory).replace(/\\/g, "/");
+if (!relativeAppPath.startsWith(".")) {
+  relativeAppPath = `./${relativeAppPath}`;
+}
+process.env.EXPO_ROUTER_APP_ROOT = relativeAppPath;
+process.env.TAMAGUI_TARGET = process.env.TAMAGUI_TARGET || "native";
+
+module.exports = {
   expo: {
     name: "My-App",
     slug: "my-app",
@@ -11,26 +22,28 @@ export default {
     splash: {
       image: "./assets/splash.png",
       resizeMode: "contain",
-      backgroundColor: "#ffffff"
+      backgroundColor: "#ffffff",
     },
     assetBundlePatterns: ["**/*"],
     ios: {
-      supportsTablet: true
+      supportsTablet: true,
     },
     android: {
       adaptiveIcon: {
         foregroundImage: "./assets/adaptive-icon.png",
-        backgroundColor: "#ffffff"
-      }
+        backgroundColor: "#ffffff",
+      },
     },
     web: {
-      favicon: "./assets/favicon.png"
+      favicon: "./assets/favicon.png",
     },
     scheme: "pelisapp",
-    plugins: ["expo-sqlite"],
+    plugins: ["expo-router", "expo-sqlite"],
+    experiments: {
+      typedRoutes: true,
+    },
     extra: {
-      // Expo expone esta variable en process.env.EXPO_PUBLIC_TMDB_API_KEY dentro del bundle
       EXPO_PUBLIC_TMDB_API_KEY: process.env.EXPO_PUBLIC_TMDB_API_KEY,
-    }
-  }
+    },
+  },
 };

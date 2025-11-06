@@ -1,4 +1,6 @@
 import * as SQLite from "expo-sqlite";
+import { Platform } from 'react-native';
+import * as webMovies from './webMovies';
 
 let dbPromise;
 
@@ -10,6 +12,10 @@ async function getDb() {
 }
 
 export async function initMoviesTable() {
+  if (Platform.OS === 'web') {
+    return webMovies.initMoviesTable();
+  }
+
   const db = await getDb();
   await db.execAsync(`
     CREATE TABLE IF NOT EXISTS movies (
@@ -86,6 +92,10 @@ export async function initMoviesTable() {
 }
 
 export async function fetchMovies() {
+  if (Platform.OS === 'web') {
+    return webMovies.fetchMovies();
+  }
+
   const db = await getDb();
   return db.getAllAsync(
     "SELECT * FROM movies ORDER BY datetime(viewedAt) DESC, id DESC"
@@ -93,11 +103,19 @@ export async function fetchMovies() {
 }
 
 export async function fetchMovieById(id) {
+  if (Platform.OS === 'web') {
+    return webMovies.fetchMovieById(id);
+  }
+
   const db = await getDb();
   return db.getFirstAsync("SELECT * FROM movies WHERE id = ?", id);
 }
 
 export async function fetchMovieByTmdbId(tmdbId) {
+  if (Platform.OS === 'web') {
+    return webMovies.fetchMovieByTmdbId(tmdbId);
+  }
+
   const db = await getDb();
   return db.getFirstAsync("SELECT * FROM movies WHERE tmdbId = ?", tmdbId);
 }
@@ -120,7 +138,6 @@ export async function createMovie({
   review = "",
   reviewDate = null,
 }) {
-  const db = await getDb();
   const normalizedGenre =
     Array.isArray(genre) && genre.length > 0
       ? genre
@@ -165,6 +182,28 @@ export async function createMovie({
       ? overview.trim()
       : "";
 
+  if (Platform.OS === 'web') {
+    return webMovies.createMovie({
+      tmdbId,
+      title,
+      overview,
+      posterPath,
+      rating: normalizedRating,
+      genre: typeof normalizedGenre === "string" ? normalizedGenre.trim() : "",
+      releaseDate: normalizedReleaseDate,
+      runtime: normalizedRuntime,
+      voteAverage: normalizedVoteAverage,
+      voteCount: normalizedVoteCount,
+      year: normalizedYear,
+      synopsis: normalizedSynopsis,
+      viewedAt,
+      userRating,
+      review,
+      reviewDate,
+    });
+  }
+
+  const db = await getDb();
   const result = await db.runAsync(
     `INSERT INTO movies (
         tmdbId,
@@ -206,6 +245,10 @@ export async function createMovie({
 }
 
 export async function updateMovie(id, fields) {
+  if (Platform.OS === 'web') {
+    return webMovies.updateMovie(id, fields);
+  }
+
   const db = await getDb();
   const normalizedFields = { ...fields };
   if (Object.prototype.hasOwnProperty.call(normalizedFields, "genre")) {
@@ -313,6 +356,10 @@ export async function updateMovie(id, fields) {
 }
 
 export async function saveReview(movieId, { userRating, review }) {
+  if (Platform.OS === 'web') {
+    return webMovies.saveReview(movieId, { userRating, review });
+  }
+
   const db = await getDb();
   await db.runAsync(
     `UPDATE movies SET 
@@ -381,11 +428,19 @@ export async function upsertFromTmdb({
 }
 
 export async function removeMovie(id) {
+  if (Platform.OS === 'web') {
+    return webMovies.removeMovie(id);
+  }
+
   const db = await getDb();
   await db.runAsync("DELETE FROM movies WHERE id = ?", id);
 }
 
 export async function resetMovies() {
+  if (Platform.OS === 'web') {
+    return webMovies.resetMovies();
+  }
+
   const db = await getDb();
   await db.execAsync("DELETE FROM movies");
 }

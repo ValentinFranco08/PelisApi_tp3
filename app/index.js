@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, ImageBackground } from "react-native";
 import { useRouter } from "expo-router";
+import LogoutButton from "../components/LogoutButton";
+import { useAuth } from "../useAuth";
 
 const HERO = {
   uri: "https://images.unsplash.com/photo-1524985069026-dd778a71c7b4?auto=format&fit=crop&w=1400&q=80",
@@ -8,6 +10,7 @@ const HERO = {
 
 export default function Home() {
   const router = useRouter();
+  const { user } = useAuth();
   const [inputId, setInputId] = useState("122");
   const normalizedId = useMemo(() => inputId.trim() || "122", [inputId]);
 
@@ -55,6 +58,14 @@ export default function Home() {
         <TouchableOpacity style={styles.libraryButton} onPress={goToLibrary}>
           <Text style={styles.libraryText}>Mi biblioteca</Text>
         </TouchableOpacity>
+
+        {user?.role === 'admin' && (
+          <TouchableOpacity style={styles.adminButton} onPress={() => router.push('/admin/users')}>
+            <Text style={styles.adminText}>Panel de Administración</Text>
+          </TouchableOpacity>
+        )}
+        
+        <LogoutButton variant="button" />
       </View>
     </ImageBackground>
   );
@@ -153,5 +164,16 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 1,
+  },
+  adminButton: {
+    backgroundColor: "#1e88e5",
+    borderRadius: 8,
+    padding: 16,
+    alignItems: "center",
+  },
+  adminText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
